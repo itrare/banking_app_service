@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class QueryType(str, Enum):
-    Create = "account_create"
-    Balance = "account_balance"
-    Deposit = "deposit"
-    Withdraw = "withdraw"
-    Transfer = "transfer"
+    Create = "Create"
+    Balance = "Balance"
+    Deposit = "Deposit"
+    Withdraw = "Withdraw"
+    Transfer = "Transfer"

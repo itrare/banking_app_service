@@ -1,25 +1,23 @@
 from app.handler import BaseExecutor
 from app.repository.account import AccountRepository
+from app.schema.account import AccountBalanceRequest, AccountCreateRequest
 from app.service.account import AccountService
 
 
 class AccountExecutor(BaseExecutor):
-
     def __init__(self, account_repo: AccountRepository):
         self.account_service = AccountService(account_repo)
 
-    async def account_create(self):
+    async def create(self, arguments):
         # prepare request
-        req = None
+        req = AccountCreateRequest(name=" ".join(arguments[0]))
         response = await self.account_service.create_account(req)
 
         return response
 
-    async def account_balance(self):
+    async def balance(self, arguments):
         # prepare request
-        req = None
-        response =  self.account_service.fetch_balance(req)
+        req = AccountBalanceRequest(account_no=arguments[0])
+        response = await self.account_service.fetch_balance(req)
 
         return response
-
-

@@ -1,0 +1,18 @@
+Create "Amit Dugal"
+Create "Gauri Kalla"
+Deposit 1001 500
+Deposit 1001 1000
+Deposit 1001 100
+Deposit 1001 60000
+Deposit 1001 10000
+Deposit 1001 10000
+Balance 1001
+Withdraw 1001 500
+Withdraw 1001 20000
+Withdraw 1001 1000
+Withdraw 1001 1900
+Withdraw 1001 1000
+Withdraw 1001 5000
+Transfer 1001 1002 5000
+Transfer 1002 1004 500
+Transfer 1002 1004 30000

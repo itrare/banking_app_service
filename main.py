@@ -1,5 +1,8 @@
+import argparse
 import asyncio
+import aiosqlite
 
+from app.database.setup import setup_db
 from app.exceptions.exc import BankingException
 from app.handler import Handler
 from app.handler.account import AccountExecutor
@@ -11,12 +14,20 @@ from app.schema import QueryType
 
 
 async def start_banking_service():
+    parser = argparse.ArgumentParser(description="Banking App Cli")
+    parser.add_argument("--initdb", type=bool, default=False)
+    args = parser.parse_args()
     try:
         handler = Handler()
 
         # initialize database repositories
-        account_repo = AccountRepository()
-        transaction_repo = TransactionRepository()
+        con = await aiosqlite.connect("banking_app.db").__aenter__()
+
+        if args.initdb:
+            await setup_db(con)
+
+        account_repo = AccountRepository(con)
+        transaction_repo = TransactionRepository(con)
 
         # create query executor to handle specific task
         account_executor = AccountExecutor(account_repo)
@@ -32,17 +43,23 @@ async def start_banking_service():
 
         while True:
             try:
-                _ = await handler.run()
+                await handler.run()
 
             except KeyboardInterrupt:
                 break
 
-    except BankingException as e:
-        print(e)
+            except BankingException as e:
+                print(e)
+
+            except Exception as e:
+                print(e)
+                if e.__str__() == "listen_done":
+                    break
+
     except Exception as e:
         print(e)
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_running_loop()
+    loop = asyncio.get_event_loop()
     loop.run_until_complete(start_banking_service())

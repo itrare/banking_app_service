@@ -5,8 +5,13 @@
 ############################ Date Created: 16 Nov 2022    ###########################
 #####################################################################################
 
-run_server:
-	uvicorn ...
 
-tests:unit:
-	pytest ...
+format:
+	set -e
+	isort --force-single-line-imports app
+	autoflake --recursive --remove-all-unused-imports --remove-unused-variables  --in-place app --exclude __init__.py
+	black app
+	isort app
+
+run_server:
+	python main.py --initdb 1
