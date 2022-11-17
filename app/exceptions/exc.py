@@ -49,7 +49,7 @@ class WithdrawLimitExhausted(BankingException):
         super().__init__("")
 
 
-class InvalidAccountNo(BankingException):
+class InvalidAccount(BankingException):
     """"""
 
     def __init__(self):
