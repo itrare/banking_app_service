@@ -23,9 +23,6 @@ class DepositService:
     async def validate_deposit(self, transaction: Transaction):
         # check if the account has the amount less than balance limit.
         # check if the deposit is between minimum and maximum deposit amount.
-        balance = await self.account_service.fetch_balance(
-            AccountBalanceRequest(account_no=transaction.account_no)
-        )
 
         if transaction.amount > MAXIMUM_DEPOSIT_AMOUNT:
             raise MaximumDepositAmount
@@ -33,6 +30,9 @@ class DepositService:
         if transaction.amount < MINIMUM_DEPOSIT_AMOUNT:
             raise MinimumDepositAmount
 
+        balance = await self.account_service.fetch_balance(
+            AccountBalanceRequest(account_no=transaction.account_no)
+        )
         future_balance = balance + transaction.amount
 
         if future_balance > MAXIMUM_ACCOUNT_BALANCE_LIMIT:

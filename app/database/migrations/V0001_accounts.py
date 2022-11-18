@@ -3,14 +3,14 @@ from aiosqlite import Connection
 
 async def migrate(conn: Connection):
     await conn.execute(
-        """CREATE TABLE IF NOT EXISTS "account" (
+        """CREATE TABLE IF NOT EXISTS accounts (
             account_no INTEGER PRIMARY KEY AUTOINCREMENT,
             name VARCHAR(255) NOT NULL,
             balance DECIMAL(10, 2) NOT NULL
         )"""
     )
     await conn.execute(
-        """CREATE TABLE IF NOT EXISTS "transaction" (
+        """CREATE TABLE IF NOT EXISTS transactions (
             transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
             account_no INTEGER NOT NULL,
             credited_to INT,
@@ -25,8 +25,16 @@ async def migrate(conn: Connection):
         )"""
     )
     await conn.execute(
-        """UPDATE SQLITE_SEQUENCE SET seq = 1000 WHERE name = 'transaction'"""
+        """INSERT INTO sqlite_sequence (name,seq) SELECT 'accounts', 1000 WHERE NOT EXISTS 
+           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);"""
     )
     await conn.execute(
-        """UPDATE SQLITE_SEQUENCE SET seq = 1000 WHERE name = 'account'"""
+        """INSERT INTO sqlite_sequence (name,seq) SELECT 'transactions', 1000 WHERE NOT EXISTS 
+           (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);"""
+    )
+    await conn.execute(
+        """UPDATE SQLITE_SEQUENCE SET seq = 1000 WHERE name = 'accounts';"""
+    )
+    await conn.execute(
+        """UPDATE SQLITE_SEQUENCE SET seq = 1000 WHERE name = 'transactions'; """
     )

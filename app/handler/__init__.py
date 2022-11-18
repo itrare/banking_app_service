@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from app.core.config import DEBUG
+from app.exceptions.exc import BankingException
 from app.schema import QueryType
 
 
@@ -9,8 +9,7 @@ class BaseExecutor:
         executor = self.__getattribute__(query_type.lower())
         if executor:
             output = await executor(rest_arguments)
-            print(output)
-            return
+            return output
         raise Exception("Invalid Executor")
 
 
@@ -25,7 +24,8 @@ class Handler:
     @staticmethod
     def _load_input(filepath: str):
         with open(filepath, "r") as file:
-            yield file.readline()
+            for f in file:
+                yield f
 
     async def set_executor(self, query_type: QueryType, executor: BaseExecutor):
         self.executor[query_type] = executor
@@ -33,11 +33,33 @@ class Handler:
     async def run_executor(self, query_type: QueryType, rest_arguments: List[str]):
         _exec_ = self.executor.get(query_type)
         if _exec_:
-            await _exec_.__run__(query_type=query_type, rest_arguments=rest_arguments)
+            return await _exec_.__run__(
+                query_type=query_type, rest_arguments=rest_arguments
+            )
 
     async def run(self, input_filepath: str = None):
 
-        arguments = Handler.__arguments__()
-        query_type: QueryType = QueryType(arguments[0])
-        rest_arguments = arguments[1:]
-        await self.run_executor(query_type=query_type, rest_arguments=rest_arguments)
+        if input_filepath:
+            commands = Handler._load_input(input_filepath)
+            for arg in commands:
+                arguments = arg
+                print(arg)
+                arguments = str(arguments).split(" ")
+                query_type: QueryType = QueryType(arguments[0])
+                rest_arguments = arguments[1:]
+                try:
+                    output = await self.run_executor(
+                        query_type=query_type, rest_arguments=rest_arguments
+                    )
+                    print(output)
+                except BankingException as e:
+                    print(e)
+
+            raise Exception("listen_done")
+        else:
+            arguments = Handler.__arguments__()
+            query_type: QueryType = QueryType(arguments[0])
+            rest_arguments = arguments[1:]
+            await self.run_executor(
+                query_type=query_type, rest_arguments=rest_arguments
+            )

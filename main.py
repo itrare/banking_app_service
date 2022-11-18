@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import aiosqlite
 
+from app.core.config import INPUT_FILE_PATH
 from app.database.setup import setup_db
 from app.exceptions.exc import BankingException
 from app.handler import Handler
@@ -43,18 +44,15 @@ async def start_banking_service():
 
         while True:
             try:
-                await handler.run()
+                await handler.run(input_filepath=INPUT_FILE_PATH)
 
             except KeyboardInterrupt:
                 break
 
-            except BankingException as e:
-                print(e)
-
             except Exception as e:
-                print(e)
                 if e.__str__() == "listen_done":
                     break
+                # print(e)
 
     except Exception as e:
         print(e)

@@ -21,10 +21,6 @@ class WithdrawService:
             return new_balance
 
     async def validate_withdraw(self, transaction: Transaction):
-        # check if the account has the amount greater or equals to withdraw amount
-        balance = await self.account_service.fetch_balance(
-            AccountBalanceRequest(account_no=transaction.account_no)
-        )
 
         if transaction.amount > MAXIMUM_WITHDRAW_AMOUNT:
             raise MaximumWithdrawAmount
@@ -38,6 +34,12 @@ class WithdrawService:
 
         if no_of_withdraws_today == WITHDRAW_DAY_LIMIT:
             raise WithdrawLimitExhausted
+
+        # check if the account has the amount greater or equals to withdraw amount
+        balance = await self.account_service.fetch_balance(
+            AccountBalanceRequest(account_no=transaction.account_no)
+        )
+
         if balance < transaction.amount:
             raise InsufficientBalance
 

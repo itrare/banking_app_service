@@ -2,8 +2,8 @@ from aiosqlite import Connection
 
 from app.schema.transaction import Transaction
 
-query_cr_debit = "UPDATE account SET balance = ? WHERE account_no = ?"
-query_add_transaction = """INSERT INTO "transaction" (account_no, credited_to, debited_from, amount, transacted_at, type) 
+query_cr_debit = "UPDATE accounts SET balance = ? WHERE account_no = ?"
+query_add_transaction = """INSERT INTO transactions (account_no, credited_to, debited_from, amount, transacted_at, type) 
                             VALUES (?, ?, ?, ?, date('now'), ?) RETURNING transaction_id"""
 
 
@@ -12,7 +12,7 @@ class TransactionRepository:
         self.conn = connection
 
     async def fetch_balance(self, account_no: int):
-        query = "SELECT balance FROM account WHERE account_no = ?"
+        query = "SELECT balance FROM accounts WHERE account_no = ?"
         cur = await self.conn.execute(query, (account_no,))
         result = await cur.fetchone()
         return result[0]
@@ -39,6 +39,7 @@ class TransactionRepository:
         result = await self.conn.execute(
             query_add_transaction,
             (
+                transaction_request.account_no,
                 transaction_request.credit_to,
                 transaction_request.debit_from,
                 transaction_request.amount,
@@ -48,6 +49,7 @@ class TransactionRepository:
         _ = await self.conn.execute(
             query_add_transaction,
             (
+                transaction_request.credit_to,
                 transaction_request.credit_to,
                 transaction_request.debit_from,
                 transaction_request.amount,
@@ -97,7 +99,7 @@ class TransactionRepository:
         return balance
 
     async def get_todays_deposits(self, account_no: int):
-        query = """SELECT COUNT(transaction_id) FROM "transaction" WHERE account_no = ? and type = 
+        query = """SELECT COUNT(transaction_id) FROM transactions WHERE account_no = ? and type = 
         'transaction.deposit' and transacted_at = date('now') """
         result = await self.conn.execute(query, (account_no,))
         row = await result.fetchone()
@@ -106,7 +108,7 @@ class TransactionRepository:
         return 0
 
     async def get_todays_withdraws(self, account_no: int):
-        query = """SELECT COUNT(transaction_id) FROM "transaction" WHERE account_no = ? and type = 
+        query = """SELECT COUNT(transaction_id) FROM transactions WHERE account_no = ? and type = 
         'transaction.withdraw' and transacted_at = date('now') """
         result = await self.conn.execute(query, (account_no,))
         row = await result.fetchone()

@@ -1,8 +1,7 @@
 from app.core.config import MAXIMUM_WITHDRAW_AMOUNT, MINIMUM_WITHDRAW_AMOUNT
-from app.exceptions.exc import (DepositLimitExhausted, InvalidAccount,
-                                MaximumDepositAmount, MaximumWithdrawAmount,
-                                MinimumDepositAmount, MinimumWithdrawAmount,
-                                WithdrawLimitExhausted)
+from app.exceptions.exc import (InvalidAccount, MaximumDepositAmount,
+                                MaximumWithdrawAmount, MinimumDepositAmount,
+                                MinimumWithdrawAmount, WithdrawLimitExhausted)
 from app.repository.account import AccountRepository
 from app.repository.transaction import TransactionRepository
 from app.schema.transaction import Transaction, TransactionType
@@ -32,17 +31,13 @@ class TransferService:
 
     async def validate_transfer(self, transfer_request: Transaction):
 
-        if not await self.account_service.is_account_valid(transfer_request.credit_to):
-            raise InvalidAccount("destination account is invalid")
-
-        if not await self.account_service.is_account_valid(transfer_request.debit_from):
-            raise InvalidAccount
-
+        valid_deposit = False
+        valid_withdraw = False
         try:
-            valid_deposit = await self.withdraw_service.validate_withdraw(
+            valid_withdraw = await self.withdraw_service.validate_withdraw(
                 Transaction(
-                    account_no=transfer_request.credit_to,
-                    type=TransactionType.Deposit,
+                    account_no=transfer_request.debit_from,
+                    type=TransactionType.Withdraw,
                     amount=transfer_request.amount,
                 )
             )
@@ -57,14 +52,14 @@ class TransferService:
                 f"Minimum withdrawal amount is {MINIMUM_WITHDRAW_AMOUNT} for account {transfer_request.debit_from}"
             )
 
-        except WithdrawLimitExhausted as e:
-            raise e
+        except Exception:
+            valid_withdraw = True
 
         try:
-            valid_withdraw = await self.deposit_service.validate_deposit(
+            valid_deposit = await self.deposit_service.validate_deposit(
                 Transaction(
-                    account_no=transfer_request.debit_from,
-                    type=TransactionType.Withdraw,
+                    account_no=transfer_request.credit_to,
+                    type=TransactionType.Deposit,
                     amount=transfer_request.amount,
                 )
             )
@@ -79,7 +74,13 @@ class TransferService:
                 f"Minimum withdrawal amount is {MINIMUM_WITHDRAW_AMOUNT} for account f{transfer_request.credit_to}"
             )
 
-        except DepositLimitExhausted as e:
-            raise e
+        except Exception:
+            valid_deposit = True
+
+        if not await self.account_service.is_account_valid(transfer_request.credit_to):
+            raise InvalidAccount("destination account is invalid")
+
+        if not await self.account_service.is_account_valid(transfer_request.debit_from):
+            raise InvalidAccount
 
         return valid_deposit and valid_withdraw
