@@ -52,6 +52,7 @@ async def start_banking_service():
             except Exception as e:
                 if e.__str__() == "listen_done":
                     break
+        return
                 # print(e)
 
     except Exception as e:

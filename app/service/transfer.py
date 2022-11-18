@@ -31,8 +31,6 @@ class TransferService:
 
     async def validate_transfer(self, transfer_request: Transaction):
 
-        valid_deposit = False
-        valid_withdraw = False
         try:
             valid_withdraw = await self.withdraw_service.validate_withdraw(
                 Transaction(
